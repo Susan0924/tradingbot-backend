@@ -40,4 +40,25 @@ public class MarketDataSimulator {
 
         return candles;
     }
+    public Candle getNextCandle() {
+
+        double open = lastPrice;
+
+        // Simulate small price movement
+        double change = (Math.random() - 0.5) * 0.01;
+
+        double close = open + change;
+        double high = Math.max(open, close) + Math.random() * 0.005;
+        double low = Math.min(open, close) - Math.random() * 0.005;
+
+        lastPrice = close;
+
+        return new Candle(
+                LocalDateTime.now(),
+                open,
+                high,
+                low,
+                close
+        );
+    }
 }

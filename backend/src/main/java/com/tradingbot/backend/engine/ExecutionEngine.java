@@ -22,6 +22,7 @@ public class ExecutionEngine {
         this.simulator = simulator;
         this.strategy = strategy;
         this.broker = broker;
+
     }
 
     public void start() {
@@ -35,21 +36,24 @@ public class ExecutionEngine {
         while (running) {
 
             // generate one new candle
+            Candle candle = simulator.getNextCandle();
             candles.addAll(simulator.generateCandles(1));
 
             String signal = strategy.evaluate(candles);
+            double price = candle.getClose();
 
             double lastPrice = candles.get(candles.size() - 1).getClose();
 
-            if (signal.equals("BUY") || signal.equals("SELL")) {
+            if (broker.hasOpenPosition()) {
 
-                if (broker.getOpenPosition() == null) {
-                    broker.openPosition(signal, lastPrice, 0.1);
-                } else {
-                    broker.closePosition(lastPrice);
+                if (!broker.getOpenPosition().getType().equals(signal)) {
+                    broker.closePosition(price);
+                    broker.openPosition(signal, price, 1);
                 }
-            }
 
+            } else {
+                broker.openPosition(signal, price, 1);
+            }
             System.out.println("Signal: " + signal);
 
             try {

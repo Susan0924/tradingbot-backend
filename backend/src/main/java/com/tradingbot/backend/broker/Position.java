@@ -23,4 +23,15 @@ public class Position {
     public double getLotSize() {
         return lotSize;
     }
+    public double calculatePnL(double currentPrice) {
+
+        if (type.equals("BUY")) {
+            return (currentPrice - entryPrice) * lotSize;
+        }
+        else if (type.equals("SELL")) {
+            return (entryPrice - currentPrice) * lotSize;
+        }
+
+        return 0;
+    }
 }
