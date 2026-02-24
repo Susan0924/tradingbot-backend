@@ -1,15 +1,26 @@
 package com.tradingbot.backend.service;
 
 import com.tradingbot.backend.model.Candle;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestOperations;
 
 import java.util.ArrayList;
 import java.util.List;
-
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.client.RestTemplate;
+import org.springframework.beans.factory.annotation.Value;
 @Service
-public class MarketDataService {
 
+public class MarketDataService {
+    @Value("${forex.api.key}")
+    private String apiKey;
+
+    @Value("${forex.api.url}")
+    private String baseUrl;
+    @Autowired
+    private RestTemplate restTemplate;
     private final List<Candle> candles = new ArrayList<>();
 
     public List<Candle> getCandles() {
@@ -22,14 +33,16 @@ public class MarketDataService {
             candles.remove(0); // keep only last 200 candles
         }
     }
-
-    @Scheduled(fixedRate = 60000) // every 60 seconds
+    @Scheduled(fixedRate = 60000)
     public void fetchMarketData() {
-        System.out.println("Polling EURUSD data...");
-        // 1. Call Forex API
-        // 2. Parse response
-        // 3. Create Candle
-        // 4. addCandle(candle)
-        // 5. Run strategy
+
+        String url = baseUrl + apiKey;
+
+
+        String response = restTemplate.getForObject(url, String.class);
+
+        System.out.println("API Response:");
+        System.out.println(response);
     }
+
 }
