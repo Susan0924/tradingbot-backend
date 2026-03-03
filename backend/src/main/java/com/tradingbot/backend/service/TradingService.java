@@ -4,6 +4,8 @@ import com.tradingbot.backend.broker.MockBroker;
 import com.tradingbot.backend.engine.ExecutionEngine;
 import com.tradingbot.backend.engine.MarketDataSimulator;
 import com.tradingbot.backend.strategy.EMAStrategy;
+import com.tradingbot.backend.strategy.Strategy;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import java.util.List;
 import com.tradingbot.backend.model.Trade;
@@ -15,6 +17,8 @@ public class TradingService {
     private ExecutionEngine engine;
     private Thread engineThread;
     private  MockBroker broker;
+    @Autowired
+    private Strategy strategy;
 
 
     public void startBot() {
@@ -24,7 +28,6 @@ public class TradingService {
         }
 
         MarketDataSimulator simulator = new MarketDataSimulator();
-        EMAStrategy strategy = new EMAStrategy(5, 10);
         broker = new MockBroker(100000);
         engine = new ExecutionEngine(simulator, strategy, broker);
 

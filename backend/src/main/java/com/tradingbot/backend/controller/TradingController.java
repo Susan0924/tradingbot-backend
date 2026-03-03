@@ -1,42 +1,64 @@
 package com.tradingbot.backend.controller;
 
+import com.tradingbot.backend.service.MarketDataService;
 import com.tradingbot.backend.service.TradingService;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
+import com.tradingbot.backend.broker.MockBroker;
+import com.tradingbot.backend.model.Candle;
 import com.tradingbot.backend.model.Trade;
 
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
 @RestController
-@RequestMapping("/api/trading")
+@RequestMapping("/api/test")
 public class TradingController {
 
+    private final MarketDataService marketDataService;
     private final TradingService tradingService;
+    private final MockBroker broker;
 
-    public TradingController(TradingService tradingService) {
+    public TradingController(MarketDataService marketDataService,
+                          TradingService tradingService,
+                          MockBroker broker) {
+        this.marketDataService = marketDataService;
         this.tradingService = tradingService;
+        this.broker = broker;
     }
 
-    @GetMapping ("/start")
-    public String start() {
-        tradingService.startBot();
-        return "Bot Started";
+    // ✅ Basic health check
+    @GetMapping("/ping")
+    public String ping() {
+        return "Backend is running 🚀";
     }
 
-    @GetMapping("/stop")
-    public String stop() {
-        tradingService.stopBot();
-        return "Bot Stopped";
+    // ✅ Get latest candles
+    @GetMapping("/candles")
+    public List<Candle> getCandles() {
+        return marketDataService.getCandles();
     }
 
-    @GetMapping("/status")
-    public String status() {
-        return tradingService.isRunning() ? "RUNNING" : "STOPPED";
-    }
+    // ✅ Get wallet balance
     @GetMapping("/balance")
-    public double balance() {
-        return tradingService.getBalance();
+    public double getBalance() {
+        return broker.getWallet().getBalance();
     }
+
+    // ✅ Get open position
+    @GetMapping("/position")
+    public Object getOpenPosition() {
+        return broker.getOpenPosition();
+    }
+
+    // ✅ Get all trades
     @GetMapping("/trades")
-    public List<Trade> trades() {
+    public List<Trade> getTrades() {
         return tradingService.getTrades();
+    }
+
+    // ✅ Get bot status
+    @GetMapping("/status")
+    public String getStatus() {
+        return tradingService.isRunning() ? "RUNNING" : "STOPPED";
     }
 }

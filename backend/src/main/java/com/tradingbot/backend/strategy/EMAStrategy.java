@@ -2,17 +2,20 @@ package com.tradingbot.backend.strategy;
 
 import com.tradingbot.backend.indicator.EMAIndicator;
 import com.tradingbot.backend.model.Candle;
+import org.springframework.stereotype.Service;
 
 import java.util.List;
 
+@Service
 public class EMAStrategy implements Strategy {
 
-    private EMAIndicator shortEma;
-    private EMAIndicator longEma;
+    private final EMAIndicator shortEma;
+    private final EMAIndicator longEma;
 
-    public EMAStrategy(int shortPeriod, int longPeriod) {
-        this.shortEma = new EMAIndicator(shortPeriod);
-        this.longEma = new EMAIndicator(longPeriod);
+    // ✅ No-arg constructor so Spring can create bean
+    public EMAStrategy() {
+        this.shortEma = new EMAIndicator(9);   // short period
+        this.longEma = new EMAIndicator(21);  // long period
     }
 
     @Override
