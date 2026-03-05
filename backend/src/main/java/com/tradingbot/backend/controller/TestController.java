@@ -1,19 +1,23 @@
 package com.tradingbot.backend.controller;
 
-import com.tradingbot.backend.engine.MarketDataSimulator;
 import com.tradingbot.backend.model.Candle;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RestController;
+import com.tradingbot.backend.service.MarketDataService;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
 @RestController
+@RequestMapping("/api")
 public class TestController {
 
-    @GetMapping("/api/test")
-    public List<Candle> testMarketData() {
+    private final MarketDataService marketDataService;
 
-        MarketDataSimulator simulator = new MarketDataSimulator();
-        return simulator.generateCandles(5);
+    public TestController(MarketDataService marketDataService) {
+        this.marketDataService = marketDataService;
+    }
+
+    @GetMapping("/candles")
+    public List<Candle> getCandles() {
+        return marketDataService.getCandles();
     }
 }

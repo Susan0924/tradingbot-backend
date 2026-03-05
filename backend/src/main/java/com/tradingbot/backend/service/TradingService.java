@@ -14,11 +14,14 @@ import com.tradingbot.backend.model.Trade;
 @Service
 public class TradingService {
 
-    private ExecutionEngine engine;
-    private Thread engineThread;
-    private  MockBroker broker;
     @Autowired
     private Strategy strategy;
+
+    @Autowired
+    private MockBroker broker;
+
+    private ExecutionEngine engine;
+    private Thread engineThread;
 
 
     public void startBot() {
@@ -28,11 +31,13 @@ public class TradingService {
         }
 
         MarketDataSimulator simulator = new MarketDataSimulator();
-        broker = new MockBroker(100000);
+
         engine = new ExecutionEngine(simulator, strategy, broker);
 
         engineThread = new Thread(engine::start);
         engineThread.start();
+
+        System.out.println("Bot started...");
     }
 
     public void stopBot() {

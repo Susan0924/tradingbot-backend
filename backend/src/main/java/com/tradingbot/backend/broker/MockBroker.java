@@ -3,16 +3,16 @@ import java.util.List;
 import java.util.ArrayList;
 
 import com.tradingbot.backend.model.Trade;
-
-
+import org.springframework.stereotype.Service;
+@Service
 public class MockBroker {
     private List<Trade> tradeHistory = new ArrayList<>();
     private Wallet wallet;
     private Position openPosition;
 
 
-    public MockBroker(double initialBalance) {
-        this.wallet = new Wallet(initialBalance);
+    public MockBroker() {
+        this.wallet = new Wallet(10000);
     }
 
     public void openPosition(String type, double price, double lotSize) {
