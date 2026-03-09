@@ -3,7 +3,6 @@ package com.tradingbot.backend.service;
 import com.tradingbot.backend.broker.MockBroker;
 import com.tradingbot.backend.engine.ExecutionEngine;
 import com.tradingbot.backend.engine.MarketDataSimulator;
-import com.tradingbot.backend.strategy.EMAStrategy;
 import com.tradingbot.backend.strategy.Strategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -24,7 +23,7 @@ public class TradingService {
     private Thread engineThread;
 
 
-    public void startBot() {
+    public synchronized void startBot() {
 
         if (engine != null) {
             return;
@@ -34,16 +33,19 @@ public class TradingService {
 
         engine = new ExecutionEngine(simulator, strategy, broker);
 
-        engineThread = new Thread(engine::start);
+        engineThread = new Thread(engine::start, "trading-engine-thread");
         engineThread.start();
 
         System.out.println("Bot started...");
     }
 
-    public void stopBot() {
+    public synchronized void stopBot() {
 
         if (engine != null) {
             engine.stop();
+            if (engineThread != null) {
+                engineThread.interrupt();
+            }
             engine = null;
             engineThread = null;
         }

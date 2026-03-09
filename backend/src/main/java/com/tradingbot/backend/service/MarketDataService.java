@@ -15,6 +15,7 @@ import org.springframework.web.client.RestTemplate;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 @Service
 
 public class MarketDataService {
@@ -34,6 +35,7 @@ public class MarketDataService {
     private MockBroker broker;
 
     private final List<Candle> candles = new ArrayList<>();
+    private static final DateTimeFormatter API_DATE_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     private Candle parseResponseToCandle(String response) {
 
@@ -48,7 +50,7 @@ public class MarketDataService {
                 JsonNode latest = values.get(0);
 
                 String datetimeStr = latest.get("datetime").asText();
-                LocalDateTime datetime = LocalDateTime.parse(datetimeStr);
+                LocalDateTime datetime = LocalDateTime.parse(datetimeStr, API_DATE_TIME_FORMAT);
 
                 double open = latest.get("open").asDouble();
                 double high = latest.get("high").asDouble();
@@ -73,6 +75,11 @@ public class MarketDataService {
         if (candles.size() < 20) return; // wait for enough data
 
         String signal = strategy.evaluate(candles);
+
+        if (!"BUY".equals(signal) && !"SELL".equals(signal)) {
+            System.out.println("Signal: HOLD (no trade)");
+            return;
+        }
 
         double price = candle.getClose();
 

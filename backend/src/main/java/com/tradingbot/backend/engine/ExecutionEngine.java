@@ -14,7 +14,7 @@ public class ExecutionEngine {
     private MockBroker broker;
 
     private boolean running = false;
-    private List<Candle> candles = new ArrayList<>();
+    private final List<Candle> candles = new ArrayList<>();
 
     public ExecutionEngine(MarketDataSimulator simulator,
                            Strategy strategy,
@@ -37,12 +37,24 @@ public class ExecutionEngine {
 
             // generate one new candle
             Candle candle = simulator.getNextCandle();
-            candles.addAll(simulator.generateCandles(1));
+            candles.add(candle);
+
+            if (candles.size() > 200) {
+                candles.remove(0);
+            }
 
             String signal = strategy.evaluate(candles);
             double price = candle.getClose();
 
-            double lastPrice = candles.get(candles.size() - 1).getClose();
+            if (!"BUY".equals(signal) && !"SELL".equals(signal)) {
+                try {
+                    Thread.sleep(2000);
+                } catch (InterruptedException e) {
+                    Thread.currentThread().interrupt();
+                    break;
+                }
+                continue;
+            }
 
             if (broker.hasOpenPosition()) {
 
@@ -59,7 +71,8 @@ public class ExecutionEngine {
             try {
                 Thread.sleep(2000);
             } catch (InterruptedException e) {
-                e.printStackTrace();
+                Thread.currentThread().interrupt();
+                break;
             }
         }
     }
