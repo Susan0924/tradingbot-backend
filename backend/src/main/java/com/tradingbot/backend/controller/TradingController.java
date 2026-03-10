@@ -1,5 +1,6 @@
 package com.tradingbot.backend.controller;
 
+import com.tradingbot.backend.model.Performance;
 import com.tradingbot.backend.service.TradingService;
 import org.springframework.web.bind.annotation.*;
 import java.util.List;
@@ -40,5 +41,9 @@ public class TradingController {
     @GetMapping("/trades")
     public List<Trade> trades() {
         return tradingService.getTrades();
+    }
+    @GetMapping("/performance")
+    public Performance performance() {
+        return tradingService.getPerformance();
     }
 }

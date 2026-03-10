@@ -8,6 +8,7 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestOperations;
 
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +49,10 @@ public class MarketDataService {
                 JsonNode latest = values.get(0);
 
                 String datetimeStr = latest.get("datetime").asText();
-                LocalDateTime datetime = LocalDateTime.parse(datetimeStr);
+                DateTimeFormatter formatter =
+                        DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+                LocalDateTime datetime = LocalDateTime.parse(datetimeStr, formatter);
 
                 double open = latest.get("open").asDouble();
                 double high = latest.get("high").asDouble();
@@ -70,16 +74,21 @@ public class MarketDataService {
     }
     private void runTradingLogic(Candle candle) {
 
-        if (candles.size() < 20) return; // wait for enough data
+        if (candles.size() < 20) return;
 
         String signal = strategy.evaluate(candles);
 
+        // Always use the latest candle
         double price = candle.getClose();
+
+        System.out.printf(
+                "Trading decision -> Signal: %s | Candle Price: %.5f%n",
+                signal, price
+        );
 
         if (broker.hasOpenPosition()) {
 
             if (!broker.getOpenPosition().getType().equals(signal)) {
-
                 broker.closePosition(price);
                 broker.openPosition(signal, price, 1);
             }
@@ -87,8 +96,6 @@ public class MarketDataService {
         } else {
             broker.openPosition(signal, price, 1);
         }
-
-        System.out.println("Signal: " + signal);
     }
 
     public void addCandle(Candle candle) {
@@ -97,7 +104,7 @@ public class MarketDataService {
             candles.remove(0); // keep only last 200 candles
         }
     }
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedRate = 300000)
     public void fetchMarketData() {
 
         String url = baseUrl + apiKey;
@@ -108,9 +115,19 @@ public class MarketDataService {
 
         if (candle == null) return;
 
+
+        System.out.println("Duplicate candle ignored");
+        if (!candles.isEmpty()) {
+            Candle last = candles.get(candles.size() - 1);
+            if (last.getTime().equals(candle.getTime())) {
+                return;
+            }
+        }
+
         addCandle(candle);
 
-        System.out.println("New Candle: " + candle.getClose());
+        System.out.println("EUR/USD Candle | Time: " + candle.getTime() +
+                " | Close: " + candle.getClose());
 
         runTradingLogic(candle);
     }

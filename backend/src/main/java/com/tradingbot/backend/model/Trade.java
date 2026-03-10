@@ -23,4 +23,6 @@ public class Trade {
     public double getExitPrice() { return exitPrice; }
     public double getPnl() { return pnl; }
     public LocalDateTime getTime() { return time; }
+
+
 }

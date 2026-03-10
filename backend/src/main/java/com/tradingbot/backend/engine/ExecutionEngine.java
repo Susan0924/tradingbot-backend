@@ -2,27 +2,25 @@ package com.tradingbot.backend.engine;
 
 import com.tradingbot.backend.broker.MockBroker;
 import com.tradingbot.backend.model.Candle;
+import com.tradingbot.backend.service.MarketDataService;
 import com.tradingbot.backend.strategy.Strategy;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class ExecutionEngine {
 
-    private MarketDataSimulator simulator;
+    private MarketDataService marketDataService;
     private Strategy strategy;
     private MockBroker broker;
 
     private boolean running = false;
-    private List<Candle> candles = new ArrayList<>();
 
-    public ExecutionEngine(MarketDataSimulator simulator,
+    public ExecutionEngine(MarketDataService marketDataService,
                            Strategy strategy,
                            MockBroker broker) {
-        this.simulator = simulator;
+        this.marketDataService = marketDataService;
         this.strategy = strategy;
         this.broker = broker;
-
     }
 
     public void start() {
@@ -30,19 +28,35 @@ public class ExecutionEngine {
         running = true;
         System.out.println("Bot started...");
 
-        // preload initial candles
-        candles.addAll(simulator.generateCandles(20));
+        // wait until first candle arrives
+        while (marketDataService.getCandles().isEmpty()) {
+            System.out.println("Waiting for first candle...");
+            try {
+                Thread.sleep(2000);
+            } catch (Exception e) {}
+        }
 
         while (running) {
 
-            // generate one new candle
-            Candle candle = simulator.getNextCandle();
-            candles.addAll(simulator.generateCandles(1));
+            List<Candle> candles = marketDataService.getCandles();
+
+            System.out.println("Candles available: " + candles.size());
+
+            if (candles.size() < 21) {
+                try { Thread.sleep(2000); } catch (Exception e) {}
+                continue;
+            }
+
+            Candle lastCandle = candles.get(candles.size() - 1);
 
             String signal = strategy.evaluate(candles);
-            double price = candle.getClose();
 
-            double lastPrice = candles.get(candles.size() - 1).getClose();
+            if(signal.equals("HOLD")) {
+                try { Thread.sleep(2000); } catch (Exception e) {}
+                continue;
+            }
+
+            double price = lastCandle.getClose();
 
             if (broker.hasOpenPosition()) {
 
@@ -54,7 +68,8 @@ public class ExecutionEngine {
             } else {
                 broker.openPosition(signal, price, 1);
             }
-            System.out.println("Signal: " + signal);
+
+            System.out.printf("Signal: %s | Price: %.5f%n", signal, price);
 
             try {
                 Thread.sleep(2000);
@@ -63,7 +78,6 @@ public class ExecutionEngine {
             }
         }
     }
-
     public void stop() {
         running = false;
     }

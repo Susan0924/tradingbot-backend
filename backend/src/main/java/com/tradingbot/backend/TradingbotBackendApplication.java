@@ -13,6 +13,7 @@ import org.springframework.web.client.RestTemplate;
 //http://localhost:8080/api/trading/balance
 //http://localhost:8080/api/trading/trades
 //http://localhost:8080/api/candles
+//http://localhost:8080/api/trading/performance
 @SpringBootApplication
 @EnableScheduling
 public class TradingbotBackendApplication {

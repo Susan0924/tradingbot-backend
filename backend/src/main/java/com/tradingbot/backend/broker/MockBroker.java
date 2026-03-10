@@ -77,4 +77,13 @@ public class MockBroker {
     public boolean hasOpenPosition() {
         return openPosition != null;
     }
+    public double getBalance() {
+        return wallet.getBalance();
+    }
+    public List<Trade> getTrades() {
+        return tradeHistory;
+    }
+
+
+
 }

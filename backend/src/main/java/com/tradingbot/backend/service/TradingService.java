@@ -2,8 +2,7 @@ package com.tradingbot.backend.service;
 
 import com.tradingbot.backend.broker.MockBroker;
 import com.tradingbot.backend.engine.ExecutionEngine;
-import com.tradingbot.backend.engine.MarketDataSimulator;
-import com.tradingbot.backend.strategy.EMAStrategy;
+import com.tradingbot.backend.model.Performance;
 import com.tradingbot.backend.strategy.Strategy;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -13,7 +12,8 @@ import com.tradingbot.backend.model.Trade;
 
 @Service
 public class TradingService {
-
+    @Autowired
+    private MarketDataService marketDataService;
     @Autowired
     private Strategy strategy;
 
@@ -30,9 +30,7 @@ public class TradingService {
             return;
         }
 
-        MarketDataSimulator simulator = new MarketDataSimulator();
-
-        engine = new ExecutionEngine(simulator, strategy, broker);
+        engine = new ExecutionEngine(marketDataService, strategy, broker);
 
         engineThread = new Thread(engine::start);
         engineThread.start();
@@ -58,5 +56,43 @@ public class TradingService {
     }
     public List<Trade> getTrades() {
         return broker.getTradeHistory();
+    }
+
+    public Performance getPerformance() {
+
+        double balance = broker.getBalance();
+        double initialBalance = 10000;
+
+        List<Trade> trades = broker.getTrades();
+
+        int totalTrades = trades.size();
+        int winningTrades = 0;
+        int losingTrades = 0;
+
+        for (Trade trade : trades) {
+
+            if (trade.getPnl() > 0)
+                winningTrades++;
+            else
+                losingTrades++;
+
+        }
+
+        double profit = balance - initialBalance;
+
+        double winRate = 0;
+
+        if (totalTrades > 0) {
+            winRate = ((double) winningTrades / totalTrades) * 100;
+        }
+
+        return new Performance(
+                balance,
+                profit,
+                totalTrades,
+                winningTrades,
+                losingTrades,
+                winRate
+        );
     }
 }
